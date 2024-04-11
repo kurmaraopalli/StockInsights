@@ -74,7 +74,6 @@ class NSE():
 
 if __name__ == '__main__':
     from datetime import date
-    import streamlit as st
     from plotly import graph_objs as go
     import mplfinance as mpf
     import matplotlib.pyplot as plt
@@ -82,49 +81,42 @@ if __name__ == '__main__':
     import datetime
 
     nse = NSE()
-    stocks = ('SBIN', 'INFY', 'TCS', 'RELIANCE')
-    selected_stock = st.sidebar.selectbox('Select Stock', stocks)
+    stockSymbols = nse.fetch_index_from_nse('NIFTY 50')
+    stocks = stockSymbols['symbol']
+    #st.title('🏂 Stock Market Analyzer and Predictor')
+    st.markdown("<h1 style='text-align: center; color: cyan;'>Stock Market Analyzer and Predictor</h1>", unsafe_allow_html=True)
+    selected_stock = st.sidebar.selectbox('NIFTY 50', stocks)
     st.title('NSE Historical data ' + selected_stock)
 
     data = nse.getHistoricalData(selected_stock, 'EQ', date(2024,1,1), date(2024,4,10))
     #print(df)
     #print(nse.fetch_index_from_nse('NIFTY MIDCAP 50'))
+    #print(nse.fetch_index_from_nse('NIFTY 50'))
+
  
     st.write(data)
-    
+col1, col2 = st.columns(2)
+ 
+
     # Plot raw data
-def plot_raw_data():
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data['date'], y=data['open'], name="stock_open"))
-    fig.add_trace(go.Scatter(x=data['date'], y=data['close'], name="stock_close"))
-    fig.layout.update(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
-    st.plotly_chart(fig)
+with col1:
+    def plot_raw_data():
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=data['date'], y=data['open'], name="stock_open"))
+        fig.add_trace(go.Scatter(x=data['date'], y=data['close'], name="stock_close"))
+        fig.layout.update(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
+        st.plotly_chart(fig)
 
-plot_raw_data()
+    plot_raw_data()
+with col2:
+    fig = go.Figure(data=[go.Candlestick(x=data['date'],
+                    open=data['open'],
+                    high=data['high'],
+                    low=data['low'],
+                    increasing_line_color= 'cyan', decreasing_line_color= 'gray',
+                    close=data['close'])])
+    fig.layout.update(title_text='Candle stick Graph ' + selected_stock, xaxis_rangeslider_visible=True)
 
-pdata = nse.getHistoricalRawData(selected_stock, 'EQ', date(2024,1,1), date(2024,4,10))
-print(pdata)
-pdata = pd.DataFrame(data)
-pdata = pdata.rename(columns={'Date ': 'Date', 'series ': 'series', 'OPEN ': 'open', 'HIGH ': 'HIGH', 'LOW ': 'LOW', 'PREV. CLOSE ': 'prev_close', 'ltp ': 'ltp', 'close ': 'close', '52W H ': 'hi_52_wk', '52W L ': 'lo_52_wk', 'VOLUME ': 'trdqty', 'VALUE ': 'trdval', 'No of trades ': 'trades'})
-reformatted_data = dict()
-reformatted_data['Date'] = []
-reformatted_data['Open'] = []
-reformatted_data['High'] = []
-reformatted_data['Low'] = []
-reformatted_data['Close'] = []
-reformatted_data['Volume'] = []
-for dict in data:
-    reformatted_data['Date'].append(datetime.datetime.fromtimestamp(int(dict['Date'])))
-    reformatted_data['Open'].append(dict['open'])
-    reformatted_data['High'].append(dict['high'])
-    reformatted_data['Low'].append(dict['low'])
-    reformatted_data['Close'].append(dict['close'])
-    reformatted_data['Volume'].append(dict['vol'])
-print("reformatted data:", reformatted_data)
-pdata = pd.DataFrame.from_dict(reformatted_data) 
-pdata.set_index('Date', inplace=True)
-mpf.plot(pdata)
-#df = df.rename(columns={'Date ': 'date', 'series ': 'series', 'OPEN ': 'open', 'HIGH ': 'HIGH', 'LOW ': 'LOW', 'PREV. CLOSE ': 'prev_close', 'ltp ': 'ltp', 'close ': 'close', '52W H ': 'hi_52_wk', '52W L ': 'lo_52_wk', 'VOLUME ': 'trdqty', 'VALUE ': 'trdval', 'No of trades ': 'trades'})
-
-#mpf.plot(data, type='candle', title=selected_stock, style='yahoo', figscale = 2.0, figratio = (1, 0.3))        
+    st.write(fig)
+        
 
