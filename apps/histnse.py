@@ -81,6 +81,8 @@ if __name__ == '__main__':
     import datetime
     import streamlit as st
     import numpy as np
+    import plotly.io as pio
+    from plotly.subplots import make_subplots
 
     nse = NSE()
     stockSymbols = nse.fetch_index_from_nse('NIFTY 50')
@@ -141,7 +143,6 @@ fig1.layout.update(title_text='Candle stick : ' + selected_stock, xaxis_rangesli
 st.write(fig1)
 
 #RSI (Relative Strength Index)
-
 def RSI(series, period):
     delta = series.diff().dropna()
     u = delta * 0
@@ -186,3 +187,28 @@ fig2 = go.Figure(
 fig2.layout.update(title_text='RSI Indicator : ' + selected_stock, xaxis_rangeslider_visible=True)
 
 st.write(fig2)
+
+#Moving average convergence/divergence (MACD) is a trend-following momentum indicator that shows the relationship between two exponential moving averages (EMAs) of a security's price.
+
+pio.templates.default = "plotly_white"
+
+fig3 = make_subplots(vertical_spacing = 0, rows=3, cols=1, row_heights=[0.6, 0.2, 0.2])
+
+fig3.add_trace(go.Candlestick(x=df['date'],
+                              open=df['open'],
+                              high=df['high'],
+                              low=df['low'],
+                              close=df['close']))
+
+fig3.add_trace(go.Scatter(x=df['date'], y = df['MA5']), row=2, col=1)
+fig3.add_trace(go.Scatter(x=df['date'], y = df['MA5']*1.1), row=2, col=1)
+fig3.add_trace(go.Bar(x=df['date'], y = df['trdqty']), row=3, col=1)
+
+fig3.update_layout(xaxis_rangeslider_visible=False,
+                  xaxis=dict(zerolinecolor='black', showticklabels=False),
+                  xaxis2=dict(showticklabels=False))
+
+fig3.update_xaxes(showline=True, linewidth=1, linecolor='black', mirror=False)
+fig3.layout.update(title_text='MACD Indicator : ' + selected_stock, xaxis_rangeslider_visible=True)
+
+st.write(fig3)
